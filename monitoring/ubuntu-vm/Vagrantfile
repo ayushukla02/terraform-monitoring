@@ -1,0 +1,41 @@
+# This vm is used to monitor the ec2 instance.
+# It has prometheus and grafana installed.
+# It monitor the ec2 instance cpu and memory usage configured using terraform .
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+
+  # This will assign a private IP to the VM, accessible from your host.
+  config.vm.network "private_network", ip: "192.168.33.10"
+
+  # Forward ports from the guest VM to your host machine
+  # This allows you to access Grafana (3000) and Prometheus (9090) from your host browser
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+  config.vm.network "forwarded_port", guest: 9090, host: 9090
+  config.vm.network "forwarded_port", guest: 9100, host: 9100 # For node_exporter on the VM itself 
+
+  # Increase VM resources (optional, but recommended for monitoring tools)
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "1048" 
+    vb.cpus = "2"      
+  end
+
+  # Provisioning script to install Docker and Docker Compose
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    sudo usermod -aG docker vagrant
+
+    # Install Docker Compose
+    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+
+    # Create directories for Prometheus and Grafana configurations
+    mkdir -p /home/vagrant/monitoring/prometheus
+    mkdir -p /home/vagrant/monitoring/grafana
+  SHELL
+end

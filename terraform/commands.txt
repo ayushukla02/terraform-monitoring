@@ -1,0 +1,12 @@
+# To create EC2 instance automatically using terraform
+# First create terraform file containing configuration for ec2.
+
+# run  following commands on bash/ terminal
+
+1. terraform fmt ---->  refactoring code formatting
+2. terraform init  -----> initailise terraform 
+3. terraform validate --------> validate code for error(debugging) 
+4. terraform plan -----------> check the changes and compare 
+5. terraform apply ---------> apply to instance.
+
+# This will autpmatically create ec2 instance on aws without manual interactions.
